@@ -144,8 +144,6 @@ curl <worker_public_ip>:30000/status
 ```
 
 ## Deploy backend server locally
-> NOTE: These steps are only needed when running locally instead of using the ``Deploy to IBM Cloud`` button.
-
 <!-- there are MANY updates necessary here, just screenshots where appropriate -->
 
 If Docker is installed on your system, simply running the following command will start the backend service
