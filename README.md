@@ -3,7 +3,7 @@
 <!-- [![Build Status](https://travis-ci.org/IBM/watson-banking-chatbot.svg?branch=master)](https://travis-ci.org/IBM/watson-banking-chatbot) -->
 <!--Add a new Title and fill in the blanks -->
 # [Analyze real time CCTV images with Convolutional Neural Networks]
-In this Code Pattern, we will deploy an application that'll leverage neural networking models to analyze RTSP (Real Time Streaming Protocol) video streams using with OpenCV / Darknet.
+In this Code Pattern, we will deploy an application that will leverage neural networking models to analyze RTSP (Real Time Streaming Protocol) video streams using with OpenCV / Darknet.
 
 There are many surveillance cameras that have been installed, but cannot be closely monitored throughout the day. Since events are more likely to occur while the operator is not watching, many significant events go undetected, even when they are recorded. Users can't be expected to trace through hours of video footage, especially if they're not sure what they're looking for.
 
@@ -151,7 +151,7 @@ Kalonjis-MacBook-Pro:dnn-object-detection kkbankol@us.ibm.com$ npm start
 > node ./bin/www
 ```
 
-## Set up Raspberry Pi Client
+## Set up the Raspberry Pi Client
 Now that we have a backend process up and running, we'll set up a device on the same local network as the CCTV cameras. The reasoning for this is that continuously pulling multiple video streams would be too demanding on the network bandwidth, and there would likely be latency issues. So as an alternative, we'll set up a Raspberry Pi on the same network as the CCTV system, and connect the two devices over the LAN instead.
 
 We'll start by installing a few dependencies for our "motion detection" script.
