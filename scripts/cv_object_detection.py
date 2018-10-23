@@ -130,6 +130,9 @@ while(vid.isOpened()):
         blobs = filter(lambda c: cv2.contourArea(c) > BLOB_SIZE, contours)
         if blobs:
             print("motion detected")
+            print("blobs")
+            # instead of comparing how different the frame is, compare based off num blobs
+            num_blobs = len(blobs)
             if last_frame_captured is None:
               last_frame_captured = frame
             # compare frame to last frame captured, skip iteration if too similar
