@@ -82,10 +82,10 @@ var initCloudant = function() {
   var username = process.env.cloudant_username || "nodejs";
   var password = process.env.cloudant_password;
   var cloudant = Cloudant({account:username, password:password});
-  // cloudant.db.create('imagedb', function(err, body) {
-  //   console.log(err)
-  //   console.log(body)
-  // })
+  cloudant.db.create('imagedb', function(err, body) {
+    console.log(err)
+    console.log(body)
+  })
   imagedb = cloudant.db.use('imagedb')
 
 }
