@@ -1,30 +1,45 @@
 ---
 stages:
-- name: BUILD
-  inputs:
-  - type: git
-    branch: master
-    service: ${SAMPLE_REPO}
-  triggers:
-  - type: commit
-  jobs:
   - name: Build
-    type: builder
-- name: DEPLOY
-  inputs:
-  - type: job
-    stage: BUILD
-    job: Build
-  triggers:
-  - type: stage
-  properties:
-  - name: CF_APP_NAME
-    value: undefined
-    type: text
-  - name: APP_URL
-    value: undefined
-    type: text
-  jobs:
+    inputs:
+      - type: git
+        branch: master
+        # service: ${SAMPLE_REPO}
+    triggers:
+      - type: commit
+    jobs:
+      - name: Build
+        type: builder
+        artifact_dir: ''
+        build_type: shell
+        script: |-
+          #!/bin/bash
+          bash -n *.sh
+  - name: Deploy
+    inputs:
+      - type: job
+        stage: Build
+        job: Build
+        dir_name: null
+    triggers:
+      - type: stage
+    properties:
+      - name: BLUEMIX_USER
+        type: text
+        value: ${BLUEMIX_USER}
+      - name: BLUEMIX_PASSWORD
+        type: secure
+        value: ${BLUEMIX_PASSWORD}
+      - name: BLUEMIX_ACCOUNT
+        type: secure
+        value: ${BLUEMIX_ACCOUNT}
+      - name: CLUSTER_NAME
+        type: text
+        value: ${CLUSTER_NAME}
+      - name: API_KEY
+        type: secure
+        value: ${API_KEY}
+    jobs:
       - name: Deploy
         type: deployer
         target:
