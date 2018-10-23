@@ -1,0 +1,89 @@
+<html>
+
+<table id='imagesTable' border="2">
+  <tr id="CH1"></th>
+  <tr id="CH2"></th>
+  <tr id="CH3"></th>
+  <tr id="CH4"></th>
+  <tr id="CAM 01"></th>
+  <tr id="CAM 02"></th>
+  <tr id="CAM 03"></th>
+  <tr id="CAM 04"></th>
+  <tr id="CAM 05"></th>
+  <tr id="CAM 06"></th>
+  <tr id="CAM 07"></th>
+  <tr id="CAM 08"></th>
+  <tr id="CAM 09"></th>
+  <tr id="CAM 10"></th>
+  <tr id="CAM 11"></th>
+  <tr id="CAM 12"></th>
+  <tr id="CAM 13"></th>
+  <tr id="CAM 14"></th>
+  <tr id="CAM 15"></th>
+  <tr id="CAM 16"></th>
+
+</table>
+</br>
+</br>
+</br>
+</br>
+<table id='eventsTable' border="1">
+<th>Location</th>
+<!-- <tr> -->
+  <!-- add headers -->
+  <!-- {location: "Label_4", cam_num: "08", time: "23:16:47", date: "2018/07/20", image: "motion_CAM_08_20180720231647.jpg", …} -->
+
+
+<!-- </tr> -->
+
+</table>
+
+</html>
+
+<script>
+
+var events;
+var eventsTable = document.getElementById("eventsTable");
+var imagesTable = document.getElementById("imagesTable");
+var tableHeaders = ["location", "cam_num", "time", "date", "image", "message_id"]
+fetch('http://localhost:3000/sql').then((res) => {
+    res.json().then( (json) => {
+        console.log(json)
+        events = json
+        json.map( ( evt, idx ) => {
+          var row = eventsTable.insertRow( eventsTable.length + 1 );
+          var cell1 = row.insertCell(0);
+          var cell2 = row.insertCell(1);
+          var cell3 = row.insertCell(2);
+          var cell4 = row.insertCell(3);
+          var cell5 = row.insertCell(4);
+          // var cell6 = row.insertCell(5);
+          cell1.innerHTML = evt['location'];
+          cell2.innerHTML = evt['cam_num'];
+          cell3.innerHTML = evt['time'];
+          cell4.innerHTML = evt['date'];
+          // cell5.innerHTML = "<img src=\"http://localhost:3000/" + evt['image'] + "\" width=\"400px\" height=\"150px\">"  //evt['image'];
+          if (evt['image'].length > 0) {
+            cell5.innerHTML = "<img src=\"http://localhost:3000/" + evt['image'] + "\"" + ">"  //evt['image'];
+          }
+          // cell6.innerHTML = evt['message_id'];
+    })
+  })
+})
+
+function genImageTable() {
+  events.map(( evt, idx ) => {
+    // <!-- {location: "Label_4", cam_num: "08", time: "23:16:47", date: "2018/07/20", image: "motion_CAM_08_20180720231647.jpg", …} -->
+    // var row = imagesTable.insertRow( table.length + 1 );
+    // row.id = evt['location'] + '_' + evt['cam_num']
+    var rows = document.getElementById('imagesTable').getElementsByTagName('tr')
+    if (evt['image'].length > 0) {
+      // console.log(evt)
+      var cell = rows[evt['cam_num']].insertCell( rows[evt['cam_num']].length + 1 )
+      cell.innerHTML = "<img src=\"http://localhost:3000/" + evt['image'] + "\"" + ">"
+    }
+  })
+}
+
+</script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>

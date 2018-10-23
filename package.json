@@ -1,0 +1,25 @@
+{
+  "name": "cameras-app",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "@cloudant/cloudant": "^2.4.0",
+    "async": "^2.6.1",
+    "await": "^0.2.6",
+    "bluebird": "^3.5.1",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "dotenv": "^6.1.0",
+    "ejs": "^2.6.1",
+    "express": "~4.16.0",
+    "express-fileupload": "^1.0.0",
+    "http-errors": "~1.6.2",
+    "jade": "~1.11.0",
+    "morgan": "~1.9.0",
+    "multer": "^1.4.1",
+    "sqlite": "^2.9.2"
+  }
+}
