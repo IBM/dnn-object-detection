@@ -19,11 +19,11 @@ When the reader has completed this Code Pattern, they will understand how to:
 <!--add an image in this path-->
 <!-- ![](doc/source/images/architecture.png) -->
 <p align="center">
-<img src="https://i.imgur.com/0RtWuzP.png" >
+<img src="https://i.imgur.com/hn2S72S.png" >
 </p>
 
 ## Flow
-1. Connect a motion detection script to a RTSP stream
+1. Connect a motion detection script to a RTSP stream or video file
 2. If motion is detected, capture screenshot and forward to Node.js server hosted locally or in IBM Cloud container service
 3. Analyze screenshot using Darknet / YOLO object detection algorithm
 4. Upload labeled screenshot and associated metadata (time, camera channel) to Cloudant database
@@ -33,10 +33,72 @@ When the reader has completed this Code Pattern, they will understand how to:
 <!-- # Watch the Video
 [![](http://img.youtube.com/vi/Jxi7U7VOMYg/0.jpg)](https://www.youtube.com/watch?v=Jxi7U7VOMYg) -->
 
+## Install Prerequisites:
+### IBM Cloud CLI
+To interact with the hosted offerings, the IBM Cloud CLI will need to be installed beforehand. The latest CLI releases can be found at the link [here](https://console.bluemix.net/docs/cli/reference/bluemix_cli/download_cli.html#download_install). An install script is maintained at the mentioned link, which can be executed with one of the following commands
+
+```
+# Mac OSX
+curl -fsSL https://clis.ng.bluemix.net/install/osx | sh
+
+# Linux
+curl -fsSL https://clis.ng.bluemix.net/install/linux | sh
+
+# Powershell
+iex(New-Object Net.WebClient).DownloadString('https://clis.ng.bluemix.net/install/powershell')
+```
+After installation is complete, confirm the CLI is working by printing the version like so
+```
+bx -v
+```
+
+*Linux*
+```
+sudo apt-get update && sudo apt-get install -y apt-transport-https
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubectl
+```
+
+*MacOS*
+```
+brew install kubernetes-cli
+```
+
+### Node.js + NPM
+If expecting to run this application locally, please continue by installing [Node.js](https://nodejs.org/en/) runtime and NPM. We'd suggest using [nvm](https://github.com/creationix/nvm) to easily switch between node versions, which can be done with the following commands
+```
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+# Place next three lines in ~/.bash_profile
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+nvm install v8.9.0
+nvm use 8.9.0
+```
+
+<!-- ### Docker
+*Mac OSX* -->
+
+### Kubernetes CLI
+
 # Steps
 Use the ``Deploy to IBM Cloud`` instructions **OR** create the services and run locally.
 
 <!--Optionally, add a deploy to ibm cloud button-->
+
+## Included components
+* [Cloudant DB](https://console.bluemix.net/catalog/services/blockchain)
+* [Kubernetes](https://console.bluemix.net/containers-kubernetes/catalog/cluster)
+
+<!--Update this section-->
+## Featured technologies
+<!-- Select components from [here](https://github.ibm.com/developer-journeys/journey-docs/tree/master/_content/dev#technologies), copy and paste the raw text for ease -->
+* [NPM](https://www.npmjs.com/)
+* [Node.js](https://nodejs.org/en/)
+* [Darknet / YOLO](https://pjreddie.com/darknet/yolo/)
+* [OpenCV](https://github.com/opencv/opencv)
 
 ## Deploy to IBM Cloud
 <!--Update the repo and tracking id-->
@@ -55,33 +117,17 @@ Use the ``Deploy to IBM Cloud`` instructions **OR** create the services and run 
 
 2. Install the IBM Cloud CLI on your development system using the following [instructions](https://console.bluemix.net/docs/containers/cs_cli_install.html)
 
-3. Install the Kubernetes CLI
-
-*Linux*
-```
-sudo apt-get update && sudo apt-get install -y apt-transport-https
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-sudo apt-get update
-sudo apt-get install -y kubectl
-```
-
-*MacOS*
-```
-brew install kubernetes-cli
-```
-
-4. Export the `KUBECONFIG` path. This should be presented just after creating the container cluster
+3. Export the `KUBECONFIG` path. This should be presented just after creating the container cluster
 ```
 export KUBECONFIG=/Users/$USER/.bluemix/plugins/container-service/clusters/mycluster/kube-config-hou02-mycluster.yml
 ```
 
-5. Deploy the kubernetes application with the following command
+4. Deploy the kubernetes application with the following command
 ```
 kubectl apply -f kube-config.yml
 ```
 
-6. Find the public ip address of the Kubernetes cluster
+5. Find the public ip address of the Kubernetes cluster
 ```
 # Get id of cluster
 ibmcloud ks clusters
@@ -89,7 +135,7 @@ ibmcloud ks clusters
 ibmcloud ks workers <cluster_id>
 ```
 
-7. Confirm that the Node.js backend is up and running
+6. Confirm that the Node.js backend is up and running
 ```
 curl <worker_public_ip>:30000/status
 ```
@@ -101,7 +147,7 @@ curl <worker_public_ip>:30000/status
 
 If Docker is installed on your system, simply running the following command will start the backend service
 ```
-docker run -d -p 3000:3000 kkbankol/opencv_yolo_pod
+docker run -d -p 3000:3000 -e cloudant_username=${cloudant_username} -e cloudant_password=${cloudant_password} --name opencv_yolo kkbankol/opencv_yolo_pod
 ```
 
 If Docker is not installed, continue with the following steps
