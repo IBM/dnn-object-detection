@@ -3,7 +3,7 @@
 <!-- [![Build Status](https://travis-ci.org/IBM/watson-banking-chatbot.svg?branch=master)](https://travis-ci.org/IBM/watson-banking-chatbot) -->
 <!--Add a new Title and fill in the blanks -->
 # [Analyze real time CCTV images with Convolutional Neural Networks]
-In this Code Pattern, we will deploy an application that'll leverage neural networking models to analyze RTSP (Real Time Streaming Protocol) video streams using with OpenCV / Darknet.
+In this Code Pattern, we will deploy an application that will leverage neural networking models to analyze RTSP (Real Time Streaming Protocol) video streams using with OpenCV / Darknet.
 
 There are many surveillance cameras that have been installed, but cannot be closely monitored throughout the day. Since events are more likely to occur while the operator is not watching, many significant events go undetected, even when they are recorded. Users can't be expected to trace through hours of video footage, especially if they're not sure what they're looking for.
 
@@ -100,7 +100,10 @@ Use the ``Deploy to IBM Cloud`` instructions **OR** create the services and run 
 * [Darknet / YOLO](https://pjreddie.com/darknet/yolo/)
 * [OpenCV](https://github.com/opencv/opencv)
 
-## Deploy to IBM Cloud
+
+To begin setting up this project, the Node.js backend will need to be deployed first. After setting up the node.js server, continue by [setting up the Raspberry Pi / Linux client](#set-up-the-raspberry-pi-client).
+
+## Deploy backend server to IBM Cloud
 <!--Update the repo and tracking id-->
 <!-- [![Deploy to IBM Cloud](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=https://github.com/IBM/watson-banking-chatbot.git) -->
 
@@ -140,7 +143,7 @@ ibmcloud ks workers <cluster_id>
 curl <worker_public_ip>:30000/status
 ```
 
-## Run locally
+## Deploy backend server locally
 > NOTE: These steps are only needed when running locally instead of using the ``Deploy to IBM Cloud`` button.
 
 <!-- there are MANY updates necessary here, just screenshots where appropriate -->
@@ -197,7 +200,7 @@ Kalonjis-MacBook-Pro:dnn-object-detection kkbankol@us.ibm.com$ npm start
 > node ./bin/www
 ```
 
-## Set up Raspberry Pi Client
+## Set up the Raspberry Pi Client
 Now that we have a backend process up and running, we'll set up a device on the same local network as the CCTV cameras. The reasoning for this is that continuously pulling multiple video streams would be too demanding on the network bandwidth, and there would likely be latency issues. So as an alternative, we'll set up a Raspberry Pi on the same network as the CCTV system, and connect the two devices over the LAN instead.
 
 We'll start by installing a few dependencies for our "motion detection" script.
@@ -225,18 +228,12 @@ As images are uploaded to the Node backend, they are then processed by the YOLO 
 
 The labeled photo, identified classes, and metadata are then uploaded to Cloudant. Each Cloudant document is arranged like so
 <p align="center">
-<img src="https://i.imgur.com/1oMSAYE.png" >
+<img src="https://i.imgur.com/2DSDuLA.png" >
 </p>
 
 <!--Optionally, include any troubleshooting tips (driver issues, etc)-->
 
 # Troubleshooting
-
-* Error: Environment {GUID} is still not active, retry once status is active
-
-  > This is common during the first run. The app tries to start before the Discovery
-environment is fully created. Allow a minute or two to pass. The environment should
-be usable on restart. If you used `Deploy to IBM Cloud` the restart should be automatic.
 
 * Error: Only one free environent is allowed per organization
 
