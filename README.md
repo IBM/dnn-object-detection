@@ -19,7 +19,8 @@ When the reader has completed this Code Pattern, they will understand how to:
 <!--add an image in this path-->
 <!-- ![](doc/source/images/architecture.png) -->
 <p align="center">
-<img src="https://i.imgur.com/hn2S72S.png" >
+<img src="https://i.imgur.com/ayAdn4C.png">
+<!-- ![](doc/source/images/architecture.png) -->
 </p>
 
 ## Flow
@@ -33,7 +34,7 @@ When the reader has completed this Code Pattern, they will understand how to:
 <!-- # Watch the Video
 [![](http://img.youtube.com/vi/Jxi7U7VOMYg/0.jpg)](https://www.youtube.com/watch?v=Jxi7U7VOMYg) -->
 
-[![Deploy to IBM Cloud](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=https://github.com/kkbankol-ibm/dnn-object-detection&branch=master)
+[![Deploy to IBM Cloud](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=https://github.com/kkbankol-ibm/dnn-object-detection.git&branch=master)
 
 ## Install Prerequisites:
 ### IBM Cloud CLI
