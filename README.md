@@ -220,7 +220,7 @@ python cv_object_detection.py sample_videos/vid10.mp4 <nodejs_ip>
 python cv_object_detection.py rtsp://<user>@<pass>192.168.1.2:8080/out.h264 <nodejs_ip>
 ```
 
-Once this script begins, it'll iterate through each frame from the video source. As these iterations continue, the Opencv libary is used to calculate a "running average". Each frame gets compared to the running average, and if a significant difference is observed, the frame is then saved as an image and forwarded to the nodejs backend.
+Once this script begins, it'll iterate through each frame from the video source. As these iterations continue, the Opencv library is used to calculate a "running average". Each frame gets compared to the running average, and if a significant difference is observed, the frame is then saved as an image and forwarded to the nodejs backend.
 
 As images are uploaded to the Node backend, they are then processed by the YOLO object detection algorithm, and labeled
 <p align="center">
@@ -236,7 +236,7 @@ The labeled photo, identified classes, and metadata are then uploaded to Cloudan
 
 # Troubleshooting
 
-* Error: Only one free environent is allowed per organization
+* Error: Only one free environment is allowed per organization
 
   > To work with a free trial, a small free Discovery environment is created. If you already have
 a Discovery environment, this will fail. If you are not using Discovery, check for an old
