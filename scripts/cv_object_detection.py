@@ -9,6 +9,11 @@ import ImageChops
 # make sure to get opencv 3.4 and up
 # pip3.7 install opencv-contrib-python
 
+try:
+    xrange
+except NameError:
+    xrange = range
+
 # Motion detection flow
 
 # The cutoff for threshold. A lower number means smaller changes between
