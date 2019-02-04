@@ -128,30 +128,48 @@ To begin setting up this project, the Node.js backend will need to be deployed f
 export KUBECONFIG=/Users/$USER/.bluemix/plugins/container-service/clusters/mycluster/kube-config-hou02-mycluster.yml
 ```
 
-4. Deploy the kubernetes application with the following command
+4. Store Cloudant Credentials
+> Store the **CLOUDANT_USERNAME**, **CLOUDANT_PASSWORD**, and **CLOUDANT_DB** into a `.env` file
 ```
-kubectl apply -f kube-config.yml
+CLOUDANT_USERNAME="username"
+CLOUDANT_PASSWORD="password"
+CLOUDANT_DB="imagedb"
 ```
 
-5. Find the public ip address of the Kubernetes cluster
+Run the following kubectl command. This will generate a "secret", allowing for the Cloudant credentials to be accessible as a environment
+```
+kubectl create secret generic cloudant-auth --from-file=.env
+```
+5. Deploy the kubernetes application with the following command
+```
+kubectl apply -f kubernetes/kube-config.yml
+```
+
+To access the pod filesystem, run the following commands
+```
+kubectl get pods
+kubectl exec -it ${pod_name} bash
+```
+
+6. Find the public ip address of the Kubernetes cluster
 ```
 # Get id of cluster
 ibmcloud ks clusters
+
 # Print workers associated with cluster, take note of public ip
-ibmcloud ks workers <cluster_id>
+ibmcloud ks workers <cluster_name>
 ```
 
-6. Confirm that the Node.js backend is up and running
+7. Confirm that the Node.js backend is up and running
 ```
 curl <worker_public_ip>:30000/status
 ```
 
 ## Deploy backend server locally
-<!-- there are MANY updates necessary here, just screenshots where appropriate -->
 
-If Docker is installed on your system, simply running the following command will start the backend service
+If Docker is installed on your system, running the following command will start the backend service locally instead
 ```
-docker run -d -p 3000:3000 -e cloudant_username=${cloudant_username} -e cloudant_password=${cloudant_password} --name opencv_yolo kkbankol/opencv_yolo_pod
+docker run -d -p 3000:3000 -e CLOUDANT_USERNAME=${CLOUDANT_USERNAME} -e CLOUDANT_PASSWORD=${CLOUDANT_PASSWORD} -e CLOUDANT_DB=${CLOUDANT_DB} --name opencv_yolo kkbankol/opencv_yolo_pod
 ```
 
 If Docker is not installed, continue with the following steps
@@ -177,10 +195,11 @@ Create the following services:
 
 ### 3. Configure credentials
 The credentials for IBM Cloud services (Cloudant DB), can be found in the ``Services`` menu in IBM Cloud by selecting the ``Service Credentials`` option for each service.
-> Store the **cloudant_username** and **cloudant_password** into the `.env` file
+> Store the **CLOUDANT_USERNAME**, **CLOUDANT_PASSWORD**, and **CLOUDANT_DB** into the `.env` file
 ```
-cloudant_username=<>
-cloudant_password=<>
+CLOUDANT_USERNAME="username"
+CLOUDANT_PASSWORD="password"
+CLOUDANT_DB="imagedb"
 ```
 
 ### 4. Install backend dependencies
@@ -202,7 +221,7 @@ Kalonjis-MacBook-Pro:dnn-object-detection kkbankol@us.ibm.com$ npm start
 ```
 
 ## Set up the Raspberry Pi Client
-Now that we have a backend process up and running, we'll set up a device on the same local network as the CCTV cameras. The reasoning for this is that continuously pulling multiple video streams would be too demanding on the network bandwidth, and there would likely be latency issues. So as an alternative, we'll set up a Raspberry Pi on the same network as the CCTV system, and connect the two devices over the LAN instead.
+Now that we have a backend process up and running, we'll set up a device on the same local network as the CCTV cameras. The reasoning for this is that continuously pulling multiple video streams would be too demanding on the network bandwidth, and there would likely be latency issues. So as an alternative, we'll set up a Raspberry Pi on the same network as the CCTV system, and connect the two devices over the LAN instead. Any alternative Linux system should work
 
 We'll start by installing a few dependencies for our "motion detection" script.
 ```
@@ -235,15 +254,6 @@ The labeled photo, identified classes, and metadata are then uploaded to Cloudan
 <!--Optionally, include any troubleshooting tips (driver issues, etc)-->
 
 # Troubleshooting
-
-* Error: Only one free environent is allowed per organization
-
-  > To work with a free trial, a small free Discovery environment is created. If you already have
-a Discovery environment, this will fail. If you are not using Discovery, check for an old
-service thay you may want to delete. Otherwise use the .env DISCOVERY_ENVIRONMENT_ID to tell
-the app which environment you want it to use. A collection will be created in this environment
-using the default configuration.
-
 <!--keep this-->
 
 

@@ -26,3 +26,11 @@ spec:
   containers:
     - name: opencv-yolo
       image: kkbankol/opencv_yolo_pod
+      envFrom:
+        - secretRef:
+           name: cloudant-auth
+      #env:
+      #  - name: CLOUDANT_USERNAME
+      #    value: ${CLOUDANT_USERNAME}
+      #  - name: CLOUDANT_PASSWORD
+      #    value: ${CLOUDANT_PASSWORD

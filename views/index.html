@@ -1,5 +1,4 @@
 <html>
-
 <table id='imagesTable' border="2">
   <tr id="CH1"></th>
   <tr id="CH2"></th>
@@ -27,6 +26,10 @@
 </br>
 </br>
 </br>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css" />
+
 <table id='eventsTable' border="1">
 <th>Location</th>
 <!-- <tr> -->
@@ -38,38 +41,241 @@
 
 </table>
 
+<div id="graphdiv"></div>
+
+<p>
+  <input type=checkbox id="car" onClick="change(this)">
+  <label for="car"> Car</label><br/>
+  <input type=checkbox id="person" checked onClick="change(this)">
+  <label for="person"> Person</label><br/>
+  <input type=checkbox id="truck" checked onClick="change(this)">
+  <label for="truck"> Truck</label>
+</p>
 </html>
 
-<script>
 
+<script>
+g = new Dygraph(
+      document.getElementById("graphdiv"),  // containing div
+      "Time,Objects\n" +                // the data series
+      // "2008-05-07,75\n" +
+      // "2008-05-08,70\n" +
+      // "2008-05-09,80\n",
+      "20181102131218,80\n" +
+      "20181102131224,70\n" +
+      "20181102141224,70\n",
+      {
+        axes : {
+             x : {
+                 valueFormatter: Dygraph.dateString_,
+                 ticker: Dygraph.dateTicker
+           }
+        }
+      }                                   // the options
+    );
+
+
+var plotObjects = function() {
+    g = new Dygraph(
+          document.getElementById("graphdiv"),  // containing div
+          // "Time,TotalObjects,Object1,Object2\n" +                // the data series
+          // [["Time","TotalObjects","Object1","Object2"]].concat(foo),                // the data series
+          // "2008-05-07,75\n" +
+          // "2008-05-08,70\n" +
+          // "2008-05-09,80\n",
+          //graphInput,
+          // [ new Date(20181105161530), [162, 0, 959, 0, 0, 0, 1 ]],
+          ["Time", "Person", "Bicycle", "Car", "Motorcycle", "Cat", "Dog", "Truck"].join(",") + '\n' + graphInput.join("\n"),
+          // "20181105161530, 162, 0, 959, 0, 0, 0, 1\n",
+          {
+            // labels: classes,
+            axes : {
+                 x : {
+                     valueFormatter: Dygraph.dateString_,
+                     // valueParser: function(x) { return 1000*parseInt(x); },
+                     ticker: Dygraph.dateTicker
+
+               }
+            }
+          }                                   // the options
+        );
+}
+
+var toggleSeries = function() {
+
+}
+
+// function setStatus() {
+//   document.getElementById("visibility").innerHTML =
+//     g.visibility().toString();
+// }
+
+var change = function(el) {
+  // g.setVisibility(parseInt(el.id), el.checked);
+  g.setVisibility( Object.keys(classesTemp).indexOf(el.id), el.checked);
+  console.log("updating " + el.id + ", " + el.checked)
+  // setStatus();
+}
+
+var getClasses = function(obj) {
+  var listClasses = []
+  obj.map( (row) => {
+    if (row.doc.classes) {
+      console.log("extracting classes")
+      var classes = Object.keys(row.doc.classes)
+      // for (cls in classes) {
+      classes.map ((cls) => {
+        if (! listClasses.includes( cls )) {
+        // if (! listClasses.includes( row.doc.classes[cls] )) {
+          console.log("appending class " +  cls)
+          listClasses.push(cls)
+        }
+      })
+    }
+  })
+  return listClasses
+}
+// JSON.stringify(events, ['time'])
 var events;
+var docs = []
+
 var eventsTable = document.getElementById("eventsTable");
 var imagesTable = document.getElementById("imagesTable");
 var tableHeaders = ["location", "cam_num", "time", "date", "image", "message_id"]
-fetch('http://localhost:3000/sql').then((res) => {
+// fetch('http://localhost:3000/sql').then((res) => {
+//     res.json().then( (json) => {
+//         console.log(json)
+//         events = json
+//         json.map( ( evt, idx ) => {
+//           var row = eventsTable.insertRow( eventsTable.length + 1 );
+//           var cell1 = row.insertCell(0);
+//           var cell2 = row.insertCell(1);
+//           var cell3 = row.insertCell(2);
+//           var cell4 = row.insertCell(3);
+//           var cell5 = row.insertCell(4);
+//           // var cell6 = row.insertCell(5);
+//           cell1.innerHTML = evt['location'];
+//           cell2.innerHTML = evt['cam_num'];
+//           cell3.innerHTML = evt['time'];
+//           cell4.innerHTML = evt['date'];
+//           // cell5.innerHTML = "<img src=\"http://localhost:3000/" + evt['image'] + "\" width=\"400px\" height=\"150px\">"  //evt['image'];
+//           if (evt['image'].length > 0) {
+//             cell5.innerHTML = "<img src=\"http://localhost:3000/" + evt['image'] + "\"" + ">"  //evt['image'];
+//           }
+//           // cell6.innerHTML = evt['message_id'];
+//     })
+//   })
+// })
+
+var weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+var months = ['January','February','March','April','May','June','July','August','September','October','November','December']
+var classes = ["person", "bicycle", "car", "motorcycle", "cat", "dog", "truck"]
+var classesTemp = {
+  "person": 0,
+  "bicycle": 0,
+  "car": 0,
+  "motorcycle": 0,
+  "cat": 0,
+  "dog": 0,
+  "truck": 0
+}
+
+var graphCSV = ''
+var graphInput = []
+fetch('http://localhost:3000/queryall').then((res) => {
+    // console.log("overview received")
     res.json().then( (json) => {
-        console.log(json)
+        // console.log(json)
         events = json
-        json.map( ( evt, idx ) => {
-          var row = eventsTable.insertRow( eventsTable.length + 1 );
-          var cell1 = row.insertCell(0);
-          var cell2 = row.insertCell(1);
-          var cell3 = row.insertCell(2);
-          var cell4 = row.insertCell(3);
-          var cell5 = row.insertCell(4);
-          // var cell6 = row.insertCell(5);
-          cell1.innerHTML = evt['location'];
-          cell2.innerHTML = evt['cam_num'];
-          cell3.innerHTML = evt['time'];
-          cell4.innerHTML = evt['date'];
-          // cell5.innerHTML = "<img src=\"http://localhost:3000/" + evt['image'] + "\" width=\"400px\" height=\"150px\">"  //evt['image'];
-          if (evt['image'].length > 0) {
-            cell5.innerHTML = "<img src=\"http://localhost:3000/" + evt['image'] + "\"" + ">"  //evt['image'];
-          }
-          // cell6.innerHTML = evt['message_id'];
+        // events['rows'].map(  (evt, idx) => { docs[idx] = evt['doc'] } )
+        // getClasses(events['rows'])
+        // var classes = getClasses(json['rows'])
+        // var values = (new Array(classes.length).fill(null));
+        // var vals = Array(classes.length).fill(null) //Array.apply(null, Array(classes.length))
+
+        // loop through cloudant rows
+        // var graphInput = [] // 2d array
+        json['rows'].map( ( doc_obj, idx ) => {
+            // var points = []
+            // insert rows into array
+            docs[idx] = doc_obj.doc
+            // confirm document has a "time" key, otherwise it's probably a design doc
+            if (doc_obj.doc.time) {
+              // populate table
+              var doc = doc_obj.doc
+              // create empty array with timestamp and
+              //
+              // ["Jan5th", 0, 0, 0]
+              var rowClasses = Object.assign({}, classesTemp)
+              Object.keys(doc.classes).map( (cls) => {
+                rowClasses[cls] += doc.classes[cls]['count']
+                // }
+              })
+              console.log(rowClasses)
+              var graphLine = [doc_obj.doc.time * 1000].concat( Object.values(rowClasses) )
+              console.log(graphLine)
+              // graphInput.push(graphLine)
+              graphInput.push(graphLine.join(','))
+              /*
+              var input = [ new Date(parseInt(doc_obj.doc.time)) ].concat(vals)
+              classes.map( (cls) => {
+                if (doc.classes[cls]) {
+                  // var i_idx = classes.indexOf(cls) + 1
+                  // TODO, dimensions seem off
+                  input[i_idx] = doc.classes[cls].count
+                  console.log(doc.classes[cls].count)
+                  console.log(i_idx)
+                }
+
+              })
+              points[idx] = input
+              */
+            //   }
+            //   return points
+            // })
+
+            var row = eventsTable.insertRow( eventsTable.length + 1 );
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
+            graphCSV += doc['time'] + ',' + doc.classes[Object.keys(doc.classes)[0]].count + ",17" + '\n'
+            // var cell6 = row.insertCell(5);
+            cell1.innerHTML = doc['location'];
+            cell2.innerHTML = doc['channel'];
+            cell3.innerHTML = doc['time'];
+            cell4.innerHTML = Object.keys(doc['classes']).join(' ');
+            var date = new Date(parseInt(doc['time']));
+            // Hours part from the timestamp
+            var hours = date.getHours();
+            // Minutes part from the timestamp
+            var minutes = date.getMinutes();
+            // Seconds part from the timestamp
+            var seconds = date.getSeconds();
+            // var dayOfMonth =
+            var weekday = weekdays[date.getDay()];
+            // console.log(hours + ':' + minutes + ':' + seconds)
+            // (`This is ${soMany} times easier!`);
+            console.log(date)
+            // console.log(`${hours}:${minutes}:${seconds}`)
+            cell5.innerHTML = `${hours}:${minutes}:${seconds}`
+
+            // cell5.innerHTML = "<img src=\"http://localhost:3000/" + evt['image'] + "\" width=\"400px\" height=\"150px\">"  //evt['image'];
+            // if (doc['image'].length > 0) {
+            //   cell5.innerHTML = "<img src=\"http://localhost:3000/" + evt['image'] + "\"" + ">"  //evt['image'];
+            // }
+            // cell6.innerHTML = evt['message_id'];
+        } else {
+          console.log("Skipping design doc")
+        }
     })
   })
 })
+
+// We have timestamp for each entry
+// So we can sort by / round to by minute, hour, etc
+
 
 function genImageTable() {
   events.map(( evt, idx ) => {

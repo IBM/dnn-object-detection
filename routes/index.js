@@ -40,7 +40,7 @@ var router = express.Router();
 /* GET home page. */
 router.get('/', function(req, res, next) {
   // res.render('index', { title: 'Express' });
-  //res.render('index.html');
+  res.render('index.html');
   res.send(200)
 });
 
@@ -79,18 +79,46 @@ router.get('/status', function(req, res, next) {
 });
 
 var initCloudant = function() {
-  var username = process.env.cloudant_username || "nodejs";
-  var password = process.env.cloudant_password;
+  var username = process.env.CLOUDANT_USERNAME || "nodejs";
+  var password = process.env.CLOUDANT_PASSWORD;
   var cloudant = Cloudant({account:username, password:password});
-  cloudant.db.create('imagedb', function(err, body) {
-    console.log(err)
+  // cloudant.db.create('imagedb', function(err, body) {
+  //   console.log(err)
+  //   console.log(body)
+  // })
+  console.log("Initializing Cloudant DB")
+  imagedb = cloudant.db.use(process.env.CLOUDANT_DB, function(err, body) {
     console.log(body)
+    if (err) {
+      console.log(err)
+      console.log("Creating Cloudant Table")
+      cloudant.db.create(process.env.CLOUDANT_DB, function(err, body) {
+
+        console.log(body)
+        if (err) {
+          console.log(err)
+        }
+        else {
+          console.log("Created Cloudant DB table")
+        }
+      })
+    } else {
+      console.log("Cloudant DB initialized")
+    }
   })
-  imagedb = cloudant.db.use('imagedb')
 
 }
 
+
 initCloudant()
+
+router.get('/initcloudant', function(req, res, next) {
+  res.send(200)
+  initCloudant()
+});
+
+
+
 
 // var uploadToCloudant = function(docID, options) {
 //   imagedb.insert({
@@ -124,7 +152,7 @@ var createCloudantWithAttachments = function(docID, imagePath, eventProps) {
                 console.log(data)
                 console.log('image/' + imageName.split('.')[1])
                 // console.log()
-                imagedb.multipart.insert({props: eventProps},
+                imagedb.multipart.insert(eventProps,
                         [{
                             name: imageName,
                             data: data,
@@ -162,8 +190,91 @@ var createCloudantWithAttachments = function(docID, imagePath, eventProps) {
 //   });
 // }
 
+var parseClasses = function(original) {
+  var classes_edited = {}
+  original['classes'].map(function(key, idx){
+    var cls = key['class']
+    if (classes_edited[cls]) {
+      console.log("class key exists, appending")
+      classes_edited[cls]["data"].push(key)
+      classes_edited[cls]["count"] += 1
+      // if (idx == len(original['classes'])) {
+      //   return classes_edited
+      // }
+    } else {
+      console.log("creating new class key")
+      classes_edited[cls] = {
+        data: [key],
+        count: 1
+    }
+      // if (idx == len(original['classes'])) {
+      //   return classes_edited
+      // }
+
+      // classes_edited[cls]["data"] = [key]
+      // classes_edited[cls]["count"] = 1
+    }
+    // return classes_edited
+    console.log("key", key['class'])
+    console.log("value", idx)
+  })
+  return classes_edited
+}
+
+// Pull all captured records from Cloudant
+router.get('/query/all', function(req, res, next) {
+  res.setHeader('Content-Type', 'application/json');
+  imagedb.list({include_docs:true}, function (err, data) {
+    console.log(err, data)
+    // result = data
+    res.json(data)
+  })
+})
+
+// query by
+router.get('/query/and', function(req, res, next) {
+  res.setHeader('Content-Type', 'application/json');
+  // req should contain
+  imagedb.list({include_docs:true}, function (err, data) {
+    console.log(err, data)
+    // result = data
+    res.json(data)
+  })
+})
+
+var queryCloudant = function () {
+  var selector = {
+    "selector": {
+      "$and": [
+          { classes : {car: {"$exists": true}}},
+          { time : {"$gt":'20181029182423'}}
+      ]
+    }
+  }
+  // imagedb.find({selector: { classes : {car: {"$exists": true}}}}, function(er, result) {
+  imagedb.find(selector, function(er, result) {
+    if (er) {
+      throw er;
+    }
+    console.log('Found %d matching documents', result.docs.length);
+    for (var i = 0; i < result.docs.length; i++) {
+      console.log('  Doc id: %s', result.docs[i]._id);
+    }
+  })
+}
+
+router.get('/query/all', function(req, res, next) {
+  res.setHeader('Content-Type', 'application/json');
+  imagedb.list({include_docs:true}, function (err, data) {
+    console.log(err, data)
+    // result = data
+    res.json(data)
+  })
+})
+
+
 // router.post('/test_image', function(req, res, next) {
-router.post('/test_image',
+router.post('/image/upload',
     upload.single('file'), function(req, res, next) {
     /*
     upload.fields ([
@@ -180,18 +291,33 @@ router.post('/test_image',
     // console.log(req)
     // TODO, this is hacky, but file upload hangs otherwise
     // console.log(req)
-    if(req.file) {
+    if (req.file) {
       console.log(req.file)
       console.log(req.body)
       try {
-        // var cmd = "/nodejsAction/cv/example_dnn_object_detection  -c=/nodejsAction/cv/yolov3.cfg -m=/nodejsAction/cv/yolov3.weights --scale=0.00392 --rgb -i=" + req.file.path + " --width=384 --height=384 --classes '/nodejsAction/cv/object_detection_classes_yolov3.txt'"
-        var object_detection_path = "/Users/kkbankol@us.ibm.com/projects/opencv/samples/dnn/object_detection"
-        var config_path = "/Users/kkbankol@us.ibm.com/projects/darknet/cfg/yolov3.cfg"
-        var weights_path = "/Users/kkbankol@us.ibm.com/projects/darknet/yolov3.weights"
-        var imagePath = "/Users/kkbankol@us.ibm.com/projects/smart-city-cameras/cameras_app/uploads/" + req.body.filename
-        var classes_path = "/Users/kkbankol@us.ibm.com/projects/opencv/samples/data/dnn/object_detection_classes_yolov3.txt"
-        var misc_opts = "--width=384 --height=384 --scale=0.00392 --rgb"
-        var cmd = [object_detection_path, " -c=" + config_path, " -m=" + weights_path, " -i=" + imagePath, misc_opts, " --classes '" + classes_path + "'"]
+        // var cmd = "/nodejsAction/cv/"example_dnn_object_detection"  -c=/nodejsAction/cv/yolov3.cfg -m=/nodejsAction/cv/yolov3.weights --scale=0.00392 --rgb -i= --width=384 --height=384 --classes '/nodejsAction/cv/object_detection_classes_yolov3.txt'"
+        // var cmd = '/root/opencv-4.0.0-beta/samples/dnn/dnn/example_dnn_object_detection -c=/tmp/yolov3.cfg -m=/tmp/yolov3.weights --scale=0.00392 --rgb -i=/tmp/cam_9_2018-10-09-14_48_00.jpg --width=384 --height=384 --classes ""'
+        // var path = "/Users/kkbankol@us.ibm.com/projects/"
+
+        // TODO, add a switch flag for running node locally vs in container
+        // var path = "/opt/cameras_app/"
+        var path = "/nodejsAction/cv/"
+        // var modelArtifacts = "/nodejsAction/cv/"
+        // var object_detection_path = "/Users/kkbankol@us.ibm.com/projects/opencv/samples/dnn/object_detection"
+        var objectDetectionBin = path + "example_dnn_object_detection"
+
+        // var modelConfigPath = "/Users/kkbankol@us.ibm.com/projects/darknet/cfg/yolov3.cfg"
+        var modelConfigPath = path + "yolov3.cfg"
+        // var modelWeightsPath = "/Users/kkbankol@us.ibm.com/projects/darknet/yolov3.weights"
+        var modelWeightsPath = path + "yolov3.weights"
+        // var modelClassesPath = "/Users/kkbankol@us.ibm.com/projects/opencv/samples/data/dnn/object_detection_classes_yolov3.txt"
+        var modelClassesPath = path + "object_detection_classes_yolov3.txt"
+
+        // var imagePath = "/Users/kkbankol@us.ibm.com/projects/smart-city-cameras/cameras_app/uploads/" + req.body.filename
+        // var imagePath = '/Users/kkbankol@us.ibm.com/projects/smart-city-cameras/dnn-object-detection/scripts/motion_images/' + req.body.filename
+        var imagePath = "/opt/cameras_app/uploads/" + req.body.filename
+        var miscOpts = "--width=384 --height=384 --scale=0.00392 --rgb"
+        var cmd = [objectDetectionBin, " -c=" + modelConfigPath, " -m=" + modelWeightsPath, " -i=" + imagePath, miscOpts, " --classes '" + modelClassesPath + "'"]
         // var cmd = "/Users/kkbankol@us.ibm.com/projects/opencv/samples/dnn/object_detection -c=/Users/kkbankol@us.ibm.com/projects/darknet/cfg/yolov3.cfg -m=/Users/kkbankol@us.ibm.com/projects/darknet/yolov3.weights --scale=0.00392 --rgb -i=/Users/kkbankol@us.ibm.com/projects/smart-city-cameras/cameras_app/uploads/file --width=384 --height=384 --classes '/Users/kkbankol@us.ibm.com/projects/opencv/samples/data/dnn/object_detection_classes_yolov3.txt'"
         // console.log(req.file.path)
         //child_process.execSync(cmd)
@@ -204,15 +330,32 @@ router.post('/test_image',
         // console.log(callFunc)
         console.log(cmd.join(" "))
         var extractClasses = child_process.execSync(cmd.join(" ")).toString()
+        // var listClasses = extractClasses.filter(function(elem, pos) {
+        //     return extractClasses.indexOf(elem) == pos;
+        // })
+        var doc_contents = {}
+        // console.log("document:", [doc_contents, req.body, extractClasses].reduce(Object.assign)),
+        // console.log("document:", Object.assign(doc_contents, req.body, JSON.parse(extractClasses)))
+        console.log("document:", Object.assign(doc_contents, req.body, {classes: parseClasses(JSON.parse(extractClasses))} ))
+
         createCloudantWithAttachments(
           req.body.time + '-' + req.body.channel + '-' + req.body.location,
           imagePath,
-          {
-            meta: req.body,
-            obj: JSON.parse(extractClasses)
-          }
+          // Object.assign({}, req.body)
+          // Object.assign(doc_contents, req.body, JSON.parse(extractClasses)),
+          Object.assign(
+            doc_contents,
+            req.body, {
+              classes: parseClasses(JSON.parse(extractClasses))
+            }
+          ),
+          // {
+          //   meta: req.body,
+          //   obj: JSON.parse(extractClasses)
+          // }
         )
-        res.send({payload: extractClasses})
+        res.send({payload: parseClasses})
+        console.log("updated")
         // next()
       } catch (err) {
         console.log(err)
@@ -227,6 +370,7 @@ router.post('/test_image',
   // res.send(console.dir(req.files));  // DEBUG: display available fields
 })
 
+/*
 router.post('/image', function(req, res, next) {
   // res.render('index', { title: 'Express' });
 
@@ -259,6 +403,7 @@ router.post('/image', function(req, res, next) {
   }
 
 });
+*/
 
 
 
