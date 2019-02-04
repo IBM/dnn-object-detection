@@ -2,7 +2,7 @@
 <!--change the repo -->
 <!-- [![Build Status](https://travis-ci.org/IBM/watson-banking-chatbot.svg?branch=master)](https://travis-ci.org/IBM/watson-banking-chatbot) -->
 <!--Add a new Title and fill in the blanks -->
-# [Analyze real time CCTV images with Convolutional Neural Networks]
+# Analyze real time CCTV images with Convolutional Neural Networks
 In this Code Pattern, we will deploy an application that will leverage neural networking models to analyze RTSP (Real Time Streaming Protocol) video streams using with OpenCV / Darknet.
 
 There are many surveillance cameras that have been installed, but cannot be closely monitored throughout the day. Since events are more likely to occur while the operator is not watching, many significant events go undetected, even when they are recorded. Users can't be expected to trace through hours of video footage, especially if they're not sure what they're looking for.
