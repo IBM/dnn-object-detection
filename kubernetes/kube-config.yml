@@ -18,7 +18,7 @@ metadata:
   # srv: api
   labels:
     srv: api
-  name: mypod
+  name: dnn-pod
 spec:
   # ports:
   #   - port: 3000
@@ -26,6 +26,7 @@ spec:
   containers:
     - name: opencv-yolo
       image: kkbankol/opencv_yolo_pod
+      imagePullPolicy: Always
       envFrom:
         - secretRef:
            name: cloudant-auth

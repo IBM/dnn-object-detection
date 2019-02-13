@@ -37,7 +37,7 @@ When the reader has completed this Code Pattern, they will understand how to:
 [![Deploy to IBM Cloud](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=https://github.com/kkbankol-ibm/dnn-object-detection.git&branch=master)
 
 ## Install Prerequisites:
-### IBM Cloud CLI
+### IBM Cloud CLI (Hosted)
 To interact with the hosted offerings, the IBM Cloud CLI will need to be installed beforehand. The latest CLI releases can be found at the link [here](https://console.bluemix.net/docs/cli/reference/bluemix_cli/download_cli.html#download_install). An install script is maintained at the mentioned link, which can be executed with one of the following commands
 
 ```
@@ -55,6 +55,8 @@ After installation is complete, confirm the CLI is working by printing the versi
 bx -v
 ```
 
+### Kubernetes CLI (Hosted)
+
 *Linux*
 ```
 sudo apt-get update && sudo apt-get install -y apt-transport-https
@@ -69,7 +71,7 @@ sudo apt-get install -y kubectl
 brew install kubernetes-cli
 ```
 
-### Node.js + NPM
+### Node.js + NPM (Local)
 If expecting to run this application locally, please continue by installing [Node.js](https://nodejs.org/en/) runtime and NPM. We'd suggest using [nvm](https://github.com/creationix/nvm) to easily switch between node versions, which can be done with the following commands
 ```
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
@@ -81,10 +83,8 @@ nvm install v8.9.0
 nvm use 8.9.0
 ```
 
-<!-- ### Docker
+<!-- ### Docker (Local)
 *Mac OSX* -->
-
-### Kubernetes CLI
 
 # Steps
 Use the ``Deploy to IBM Cloud`` instructions **OR** create the services and run locally.
@@ -138,17 +138,30 @@ CLOUDANT_DB="imagedb"
 
 Run the following kubectl command. This will generate a "secret", allowing for the Cloudant credentials to be accessible as a environment
 ```
-kubectl create secret generic cloudant-auth --from-file=.env
+source .env
+kubectl create secret generic cloudant-auth --from-literal=CLOUDANT_USERNAME=${CLOUDANT_USERNAME} --from-literal=CLOUDANT_PASSWORD=${CLOUDANT_PASSWORD} --from-literal=CLOUDANT_DB=${CLOUDANT_DB}
 ```
+
+<!-- kubectl create secret generic cloudant-auth --from-file=.env -->
+
+
 5. Deploy the kubernetes application with the following command
 ```
 kubectl apply -f kubernetes/kube-config.yml
 ```
 
-To access the pod filesystem, run the following commands
+
+To access the pod filesystem and confirm the credentials have been imported correctly, run the following commands (Optional)
 ```
 kubectl get pods
-kubectl exec -it ${pod_name} bash
+kubectl exec -it dnn-pod bash
+# print environment vars in pod/container, filter by cloudant
+env | grep -i cloudant
+```
+
+After confirming the Cloudant credentials are accessible as environment variables, tail the app logs with the following (Optional)
+```
+kubectl logs -f dnn-pod
 ```
 
 6. Find the public ip address of the Kubernetes cluster
@@ -156,7 +169,7 @@ kubectl exec -it ${pod_name} bash
 # Get id of cluster
 ibmcloud ks clusters
 
-# Print workers associated with cluster, take note of public ip
+# Print workers associated with cluster, take note of public ip. Default name is "mycluster"
 ibmcloud ks workers <cluster_name>
 ```
 
@@ -169,7 +182,7 @@ curl <worker_public_ip>:30000/status
 
 If Docker is installed on your system, running the following command will start the backend service locally instead
 ```
-docker run -d -p 3000:3000 -e CLOUDANT_USERNAME=${CLOUDANT_USERNAME} -e CLOUDANT_PASSWORD=${CLOUDANT_PASSWORD} -e CLOUDANT_DB=${CLOUDANT_DB} --name opencv_yolo kkbankol/opencv_yolo_pod
+docker run -d -p 30000:30000 -e CLOUDANT_USERNAME=${CLOUDANT_USERNAME} -e CLOUDANT_PASSWORD=${CLOUDANT_PASSWORD} -e CLOUDANT_DB=${CLOUDANT_DB} --name opencv_yolo kkbankol/opencv_yolo_pod
 ```
 
 If Docker is not installed, continue with the following steps
@@ -192,6 +205,7 @@ $ git clone https://github.com/IBM/dnn-object-detection
 Create the following services:
 
 * [**Cloudant DB**](https://console.bluemix.net/catalog/services/cloudant)
+* [**Kubernetes**](https://console.bluemix.net/containers-kubernetes/catalog/cluster) (Hosted)
 
 ### 3. Configure credentials
 The credentials for IBM Cloud services (Cloudant DB), can be found in the ``Services`` menu in IBM Cloud by selecting the ``Service Credentials`` option for each service.
@@ -221,22 +235,29 @@ Kalonjis-MacBook-Pro:dnn-object-detection kkbankol@us.ibm.com$ npm start
 ```
 
 ## Set up the Raspberry Pi Client
-Now that we have a backend process up and running, we'll set up a device on the same local network as the CCTV cameras. The reasoning for this is that continuously pulling multiple video streams would be too demanding on the network bandwidth, and there would likely be latency issues. So as an alternative, we'll set up a Raspberry Pi on the same network as the CCTV system, and connect the two devices over the LAN instead. Any alternative Linux system should work
+Now that we have a backend process up and running, we'll set up a device on the same local network as the CCTV cameras. The reasoning for this is that continuously pulling multiple video streams would be too demanding on the network bandwidth, and there would likely be latency issues. So as an alternative, we'll set up a Raspberry Pi on the same network as the CCTV system, and connect the two devices over the LAN instead. Any alternative Linux system should work.
 
-We'll start by installing a few dependencies for our "motion detection" script.
+We'll start by installing a few dependencies for our "motion detection" script. Skip the packages that are already installed on your system
 ```
+# Linux
 sudo apt-get update
-sudo apt-get install python ffmpeg -y
+sudo apt-get install python -y
+sudo apt-get install ffmpeg -y
+
+# Mac OS
+brew install ffmpeg
+brew install python
+
 pip install numpy cv2 requests
 ```
 
 Next, we can actually begin processing video that has either been pre-recorded or being live streamed. The script expects two arguments. The first argument is the video source (file or RTSP stream). The second argument is the ip address where images/metadata can be sent, this ip will either be 127.0.0.1 (if running node backend locally), or the public ip of the Kubernetes cluster.
 ```
 # process pre-recorded video
-python cv_object_detection.py sample_videos/vid10.mp4 <nodejs_ip>
+python scripts/cv_object_detection.py sample_videos/vid10.mp4 <nodejs_ip> <nodejs_port>
 
 # process live stream video
-python cv_object_detection.py rtsp://<user>@<pass>192.168.1.2:8080/out.h264 <nodejs_ip>
+python cv_object_detection.py rtsp://<user>@<pass>192.168.1.2:8080/out.h264 <nodejs_ip> <nodejs_port>
 ```
 
 Once this script begins, it'll iterate through each frame from the video source. As these iterations continue, the Opencv libary is used to calculate a "running average". Each frame gets compared to the running average, and if a significant difference is observed, the frame is then saved as an image and forwarded to the nodejs backend.
